@@ -1,0 +1,11 @@
+CREATE TYPE "Role" AS ENUM ('EDITOR', 'VIEWER');
+CREATE TABLE "User" ("id" UUID NOT NULL, "email" TEXT NOT NULL, "name" TEXT NOT NULL, CONSTRAINT "User_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE TABLE "Document" ("id" UUID NOT NULL, "ownerId" UUID NOT NULL, "title" VARCHAR(200) NOT NULL, "content" TEXT NOT NULL DEFAULT '<p></p>', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "Document_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "DocumentShare" ("id" UUID NOT NULL, "documentId" UUID NOT NULL, "userId" UUID NOT NULL, "role" "Role" NOT NULL, CONSTRAINT "DocumentShare_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "Document_ownerId_updatedAt_id_idx" ON "Document"("ownerId", "updatedAt" DESC, "id");
+CREATE UNIQUE INDEX "DocumentShare_documentId_userId_key" ON "DocumentShare"("documentId", "userId");
+CREATE INDEX "DocumentShare_userId_documentId_idx" ON "DocumentShare"("userId", "documentId");
+ALTER TABLE "Document" ADD CONSTRAINT "Document_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "DocumentShare" ADD CONSTRAINT "DocumentShare_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "DocumentShare" ADD CONSTRAINT "DocumentShare_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
