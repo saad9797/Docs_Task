@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useBlocker, useParams, Link } from 'react-router-dom';
+import { useBlocker, useParams, Link, useNavigate } from 'react-router-dom';
 import {
   EditorContent,
   useEditor,
@@ -38,9 +38,12 @@ import Undo from '@mui/icons-material/Undo';
 import Redo from '@mui/icons-material/Redo';
 import CloudDoneOutlined from '@mui/icons-material/CloudDoneOutlined';
 import LockOutlined from '@mui/icons-material/LockOutlined';
+import ShareOutlined from '@mui/icons-material/ShareOutlined';
+import DeleteOutline from '@mui/icons-material/DeleteOutline';
 import { api, message, type Document } from './api';
 import { ErrorState, Header, Loading, RoleBadge } from './components';
 import { useAutosave } from './useAutosave';
+import ShareDialog from './ShareDialog';
 function Toolbar({ editor, readonly }: { editor: TiptapEditor; readonly: boolean }) {
   const state = useEditorState({
     editor,
@@ -173,12 +176,18 @@ function Toolbar({ editor, readonly }: { editor: TiptapEditor; readonly: boolean
   );
 }
 function OpenDocument({ doc }: { doc: Document }) {
+  const navigate = useNavigate();
+  const allowLeave = useRef(false);
+  const [sharing, setSharing] = useState(false),
+    [deleting, setDeleting] = useState(false),
+    [deleteBusy, setDeleteBusy] = useState(false),
+    [deleteError, setDeleteError] = useState('');
   const validTitle = useRef(doc.title);
   const [title, setTitle] = useState(doc.title),
     [titleError, setTitleError] = useState('');
   const autosave = useAutosave(doc.id);
   const readonly = doc.role === 'VIEWER';
-  const blocker = useBlocker(autosave.dirty || Boolean(titleError));
+  const blocker = useBlocker(() => !allowLeave.current && (autosave.dirty || Boolean(titleError)));
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] }, underline: false, link: false }),
@@ -283,6 +292,23 @@ function OpenDocument({ doc }: { doc: Document }) {
               </>
             )}
           </Box>
+          {doc.role === 'OWNER' && (
+            <>
+              <Tooltip title="Delete document">
+                <IconButton aria-label="Delete document" onClick={() => setDeleting(true)}>
+                  <DeleteOutline fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Button
+                variant="contained"
+                startIcon={<ShareOutlined fontSize="small" />}
+                onClick={() => setSharing(true)}
+                sx={{ minWidth: 0, px: { xs: 1.5, sm: 2 } }}
+              >
+                Share
+              </Button>
+            </>
+          )}
         </Stack>
         {editor && <Toolbar editor={editor} readonly={readonly} />}
       </Box>
@@ -313,6 +339,52 @@ function OpenDocument({ doc }: { doc: Document }) {
           A little space to think clearly.
         </Typography>
       </Container>
+      {doc.role === 'OWNER' && (
+        <ShareDialog doc={{ ...doc, title }} open={sharing} onClose={() => setSharing(false)} />
+      )}
+      <Dialog
+        open={deleting}
+        onClose={deleteBusy ? undefined : () => setDeleting(false)}
+        aria-labelledby="delete-title"
+      >
+        <DialogTitle id="delete-title">Delete this document?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            “{title}” and everyone’s access to it will be permanently removed.
+          </Typography>
+          {deleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={deleteBusy} onClick={() => setDeleting(false)}>
+            Keep document
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={deleteBusy}
+            onClick={async () => {
+              setDeleteBusy(true);
+              setDeleteError('');
+              try {
+                await autosave.flush();
+                await api(`/documents/${doc.id}`, { method: 'DELETE' });
+                allowLeave.current = true;
+                navigate('/');
+              } catch (e) {
+                setDeleteError(message(e));
+              } finally {
+                setDeleteBusy(false);
+              }
+            }}
+          >
+            {deleteBusy ? 'Deleting…' : 'Delete document'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={blocker.state === 'blocked'}>
         <DialogTitle>Save your changes before leaving?</DialogTitle>
         <DialogContent>
