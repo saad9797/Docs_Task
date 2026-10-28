@@ -32,6 +32,7 @@ function inspectZip(buffer) {
     });
   });
 }
+parentPort.postMessage({ ready: true });
 try {
   const buffer = Buffer.from(workerData.buffer);
   let html;

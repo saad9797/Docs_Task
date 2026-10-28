@@ -6,25 +6,28 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.5",
-    "@mui/material": "^7.3.5",
-    "@mui/icons-material": "^7.3.5",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.5",
+    "@mui/material": "^7.3.5",
+    "@tiptap/extension-placeholder": "^3.10.0",
+    "@tiptap/extension-underline": "^3.10.0",
     "@tiptap/react": "^3.10.0",
     "@tiptap/starter-kit": "^3.10.0",
-    "@tiptap/extension-underline": "^3.10.0",
-    "@tiptap/extension-placeholder": "^3.10.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.5"
   },
   "devDependencies": {
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
-    "vite": "^7.2.2"
+    "jsdom": "^27.4.0",
+    "vite": "^7.2.2",
+    "vitest": "^4.1.12"
   }
 }

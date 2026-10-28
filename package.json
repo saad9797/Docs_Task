@@ -13,7 +13,7 @@
     "typecheck": "npm run typecheck --workspaces",
     "lint": "eslint .",
     "format": "prettier --write client server scripts package.json eslint.config.mjs .prettierrc.json README.md ARCHITECTURE.md AI_WORKFLOW.md SUBMISSION.md render.yaml docs",
-    "test": "npm run test -w server",
+    "test": "npm run test --workspaces",
     "db:migrate": "npm run db:migrate -w server",
     "db:seed": "npm run db:seed -w server",
     "db:local": "tsx scripts/local-db.ts",

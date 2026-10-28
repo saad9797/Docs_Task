@@ -153,6 +153,33 @@ describe.sequential('document permissions and persistence', () => {
       ).status,
     ).toBe(403);
   });
+  test('unsupported PUT enforces access before returning method not allowed', async () => {
+    for (const token of [viewer, outsider]) {
+      const denied = await request(app)
+        .put(`/api/documents/${docId}`)
+        .set(auth(token))
+        .send({ title: 'Forbidden' });
+      expect(denied.status).toBe(403);
+      expect(denied.body.error.code).toBe('FORBIDDEN');
+    }
+    const ownerResult = await request(app)
+      .put(`/api/documents/${docId}`)
+      .set(auth(owner))
+      .send({ title: 'Not applied' });
+    expect(ownerResult.status).toBe(405);
+    expect(ownerResult.headers.allow).toBe('GET, PATCH, DELETE');
+    expect(
+      (
+        await request(app)
+          .put(`/api/documents/${randomUUID()}`)
+          .set(auth(outsider))
+          .send({ title: 'Missing' })
+      ).status,
+    ).toBe(404);
+    expect((await request(app).get(`/api/documents/${docId}`).set(auth(owner))).body.title).toBe(
+      'A document',
+    );
+  });
   test('editor can update title/content but cannot manage sharing', async () => {
     await request(app)
       .put(`/api/documents/${docId}/shares`)

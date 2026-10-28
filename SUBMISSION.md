@@ -4,14 +4,14 @@
 
 ## Included
 
-- `/client`: React + TypeScript + Vite + Material UI, profile picker, two document collections, server-side title search, paginated cards, Tiptap editor, active toolbar, serial autosave, sharing dialog, file-import dialog, responsive styling, loading/error/empty states.
+- `/client`: React + TypeScript + Vite + Material UI, profile picker, two document collections, server-side title search, paginated cards, Tiptap editor, active toolbar, serial autosave, sharing dialog, file-import dialog, responsive styling, loading/error/empty states, and Vitest/jsdom API/autosave regression tests.
 - `/server`: Express + TypeScript, signed mock sessions, Zod validation, centralized JSON errors, Prisma services, role enforcement, sanitized content, memory uploads and worker conversion.
 - `/server/prisma`: schema, SQL migration, idempotent four-user/two-document seed.
-- `/server/src/*.test.ts`: Vitest + Supertest integration tests using separate PostgreSQL data and isolated cleanup.
+- `/server/src/**/*.test.ts`: Vitest + Supertest integration tests using separate PostgreSQL data and isolated cleanup, plus worker lifecycle tests.
 - `/server/test/fixtures/sample.docx`: real Word conversion fixture.
 - `/scripts/local-db.ts`: optional disposable/local PostgreSQL development helper.
 - Root npm scripts, lockfile, ESLint/Prettier settings, environment examples, `.gitignore`, `.gitattributes`, and `render.yaml`.
-- `README.md`, `ARCHITECTURE.md`, `AI_WORKFLOW.md`, `SUBMISSION.md`, `docs/README.md`, and `docs/MANUAL_TEST.md`.
+- `README.md`, `ARCHITECTURE.md`, `AI_WORKFLOW.md`, `SUBMISSION.md`, `docs/README.md`, `docs/MANUAL_TEST.md`, and `docs/QA_REPORT.md`.
 
 ## Accounts
 
@@ -23,7 +23,7 @@ Document create/read/inline rename/content edit/delete; formatting persistence; 
 
 ## External completion steps
 
-Verification in the implementation workspace: ESLint, both TypeScript checks, both production builds, and **19 PostgreSQL-backed integration tests passed**. `npm audit` reported **0 vulnerabilities**. Production HTTP smoke checks passed for database readiness, SPA deep links, gzip/immutable assets, JSON asset errors, mock login, and metadata-only document pages. Browser interaction was stopped by the user before visual/manual validation; complete `docs/MANUAL_TEST.md` before submission.
+Verification after the assignment QA audit: ESLint, both TypeScript checks, both production builds, and **36 automated tests passed** (12 client, 20 PostgreSQL-backed integration, 4 worker lifecycle). A fresh `npm ci`, fresh database migration/seed, and the full check passed in an isolated clean checkout with the QA changes applied. `npm audit` reported **0 vulnerabilities**. Live Supertest checks passed **22/22**, and headless Chromium browser checks passed **13/13**, including keyboard formatting, undo/redo, autosave/error recovery, persistence, sharing roles, and mobile overflow. Production HTTP smoke checks also passed. Baseline failures and each separate fix/rerun are recorded in `docs/QA_REPORT.md`; actual Render/Neon deployment remains unverified.
 
 - Create Neon database, supply production connection URL, push repository, and deploy to Render.
 - Replace the live URL above; validate the actual deployed environment.

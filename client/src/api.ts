@@ -53,8 +53,10 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       signal: options.signal ? AbortSignal.any([options.signal, timeout]) : timeout,
     });
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') throw error;
-    if (error instanceof Error && error.name === 'TimeoutError')
+    const name =
+      error !== null && typeof error === 'object' && 'name' in error ? error.name : undefined;
+    if (name === 'AbortError') throw error;
+    if (name === 'TimeoutError')
       throw new ApiError(0, 'The server is taking too long to respond. Please try again.');
     throw new ApiError(0, 'Unable to connect. Check your connection and try again.');
   }

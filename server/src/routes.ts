@@ -105,6 +105,11 @@ router.post('/documents', async (req, res) =>
 router.get('/documents/:id', async (req, res) =>
   res.json(await docs.fetchDocument(idSchema.parse(req.params.id), req.userId)),
 );
+router.put('/documents/:id', async (req, res) => {
+  await docs.access(idSchema.parse(req.params.id), req.userId, 'edit');
+  res.setHeader('Allow', 'GET, PATCH, DELETE');
+  throw new AppError(405, 'METHOD_NOT_ALLOWED', 'Use PATCH to update this document.');
+});
 router.patch('/documents/:id', async (req, res) =>
   res.json(
     await docs.updateDocument(

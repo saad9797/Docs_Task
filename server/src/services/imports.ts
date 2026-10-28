@@ -35,37 +35,49 @@ export async function importDocument(userId: string, file?: Express.Multer.File)
         workerData: { buffer: file.buffer, extension },
         resourceLimits: { maxOldGenerationSizeMb: 96, stackSizeMb: 4 },
       });
-      const timer = setTimeout(() => {
-        void worker.terminate();
-        reject(
-          new AppError(
-            422,
-            'IMPORT_TIMEOUT',
-            'This file took too long to process. Try a simpler document.',
-          ),
-        );
-      }, 10000);
+      let settled = false;
+      let timer: ReturnType<typeof setTimeout>;
       const finish = () => {
+        if (settled) return false;
+        settled = true;
         clearTimeout(timer);
         void worker.terminate();
+        return true;
       };
-      worker.once('message', (result: { html?: string; error?: string }) => {
-        finish();
+      const timeout = (message: string) => {
+        if (finish()) reject(new AppError(422, 'IMPORT_TIMEOUT', message));
+      };
+      // Cold module loading is separate from the bounded document conversion budget.
+      timer = setTimeout(
+        () => timeout('Import processing could not start in time. Please try again.'),
+        30000,
+      );
+      worker.on('message', (result: { ready?: boolean; html?: string; error?: string }) => {
+        if (settled) return;
+        if (result.ready) {
+          clearTimeout(timer);
+          timer = setTimeout(
+            () => timeout('This file took too long to process. Try a simpler document.'),
+            10000,
+          );
+          return;
+        }
+        if (!finish()) return;
         if (result.error) reject(new AppError(422, 'IMPORT_FAILED', result.error));
         else resolve(result.html!);
       });
       worker.once('error', () => {
-        finish();
-        reject(
-          new AppError(
-            422,
-            'IMPORT_FAILED',
-            'This file could not be processed. Try a smaller or simpler document.',
-          ),
-        );
+        if (finish())
+          reject(
+            new AppError(
+              422,
+              'IMPORT_FAILED',
+              'This file could not be processed. Try a smaller or simpler document.',
+            ),
+          );
       });
-      worker.once('exit', (code) => {
-        if (code !== 0)
+      worker.once('exit', () => {
+        if (finish())
           reject(
             new AppError(
               422,

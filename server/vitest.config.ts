@@ -14,5 +14,5 @@ if (!url || !new URL(url).pathname.includes('test'))
 process.env.DATABASE_URL = url;
 process.env.JWT_SECRET = 'test-only-secret-at-least-thirty-two-characters';
 export default defineConfig({
-  test: { fileParallelism: false, testTimeout: 20000, env: { NODE_ENV: 'test' } },
+  test: { fileParallelism: false, testTimeout: 45000, env: { NODE_ENV: 'test' } },
 });

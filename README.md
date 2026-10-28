@@ -12,7 +12,7 @@ A lightweight collaborative document workspace: React, TypeScript, Vite, Materia
 - Import `.txt`, `.md`, or `.docx` as a **new** editable document. Filename becomes the title. Upload limit: **2 MiB (2,097,152 bytes)**, displayed as 2 MB in the UI. Text/Markdown must be UTF-8. Sanitized document content is limited to **500,000 UTF-8 bytes**.
 - Responsive workspace, accessible control labels, active formatting state, loading/error/empty states, and a centered white writing surface.
 
-Conversion and HTML sanitization happen on the server. Word/Markdown parsing runs in worker threads, with two concurrent conversions per process, a 10-second deadline, 96 MB worker JS heap limit, and ZIP expansion checks (16 MiB / 1,000 entries). Files stay in memory and are not retained. Images, tables, external assets, and advanced Word layout are not imported. Supported text formatting survives refresh.
+Conversion and HTML sanitization happen on the server. Word/Markdown parsing runs in worker threads, with two concurrent conversions per process, a 30-second cold worker startup allowance followed by a 10-second conversion deadline, 96 MB worker JS heap limit, and ZIP expansion checks (16 MiB / 1,000 entries). Files stay in memory and are not retained. Images, tables, external assets, and advanced Word layout are not imported. Supported text formatting survives refresh.
 
 ## Demo profiles
 
@@ -75,7 +75,9 @@ Open **http://127.0.0.1:5173**. Vite proxies `/api` to port 3001. Seeding is ide
 
 ### Verification
 
-Tests use real PostgreSQL and delete only the test users/documents they create. Never point the test URL at valuable data. Apply migrations to the test database first.
+Server integration tests use real PostgreSQL and delete only the test users/documents they create. Never point the test URL at valuable data. Apply migrations to the test database first.
+
+The server suite uses Vitest/Supertest against PostgreSQL. Client tests use Vitest/jsdom with mocked requests to verify autosave ordering, retry, navigation protection, and the typed API client. `npm test` runs both workspaces; use `npm test --workspace client` or `npm test --workspace server` to run them separately.
 
 PowerShell:
 
