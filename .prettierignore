@@ -2,3 +2,4 @@ package-lock.json
 dist
 node_modules
 .local-postgres
+z_prompts.md

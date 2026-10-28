@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -24,6 +24,7 @@ import { ErrorState, Header, relativeDate, RoleBadge } from './components';
 import { useSession } from './session';
 import ImportDialog from './ImportDialog';
 export default function Documents() {
+  const moreController = useRef<AbortController | null>(null);
   const [importing, setImporting] = useState(false);
   const { user } = useSession();
   const navigate = useNavigate();
@@ -43,6 +44,8 @@ export default function Documents() {
   }, [query]);
   useEffect(() => {
     const controller = new AbortController();
+    moreController.current?.abort();
+    setMore(false);
     setLoading(true);
     setError('');
     setItems([]);
@@ -61,7 +64,10 @@ export default function Documents() {
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
       });
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      moreController.current?.abort();
+    };
   }, [section, search, revision]);
   async function create() {
     setCreating(true);
@@ -79,21 +85,25 @@ export default function Documents() {
     }
   }
   async function loadMore() {
+    const controller = new AbortController();
+    moreController.current = controller;
     setMore(true);
     setError('');
     try {
       const data = await api<Page<DocumentMeta>>(
         `/documents?section=${section}&q=${encodeURIComponent(search)}&limit=12&cursor=${encodeURIComponent(cursor!)}`,
+        { signal: controller.signal },
       );
+      if (controller.signal.aborted) return;
       setItems((old) => [
         ...old,
         ...data.items.filter((row) => !old.some((item) => item.id === row.id)),
       ]);
       setCursor(data.nextCursor);
     } catch (e) {
-      setError(message(e));
+      if (!controller.signal.aborted) setError(message(e));
     } finally {
-      setMore(false);
+      if (!controller.signal.aborted) setMore(false);
     }
   }
   return (

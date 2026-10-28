@@ -202,6 +202,7 @@ function OpenDocument({ doc }: { doc: Document }) {
         role: 'textbox',
         'aria-label': 'Document content',
         'aria-multiline': 'true',
+        'aria-readonly': String(readonly),
         spellcheck: 'true',
       },
     },

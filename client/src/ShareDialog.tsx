@@ -46,7 +46,6 @@ export default function ShareDialog({
     const controller = new AbortController();
     setLoading(true);
     setError('');
-    setNotice('');
     api<Page<Share>>(`/documents/${doc.id}/shares?limit=10`, { signal: controller.signal })
       .then((data) => {
         setItems(data.items);

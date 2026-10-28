@@ -1,11 +1,35 @@
 import { z } from 'zod';
 export const idSchema = z.uuid();
-export const titleSchema = z.string().trim().min(1, 'A title is required.').max(200);
-export const contentSchema = z.string().max(500_000).refine(value => Buffer.byteLength(value, 'utf8') <= 500_000, 'Content must be under 500 KB.');
-export const createSchema = z.object({ title: titleSchema.default('Untitled document'), content: contentSchema.optional() }).strict();
-export const updateSchema = z.object({ title: titleSchema.optional(), content: contentSchema.optional() }).strict().refine(value => Object.keys(value).length > 0, 'Provide a title or content.');
-export const pageSchema = z.object({ limit: z.coerce.number().int().min(1).max(50).default(12), cursor: z.string().max(300).optional() }).strict();
-export const listSchema = pageSchema.extend({ section: z.enum(['mine', 'shared']).default('mine'), q: z.string().trim().max(100).default('') });
-export const shareSchema = z.object({ email: z.email().trim().toLowerCase().max(254), role: z.enum(['EDITOR', 'VIEWER']) }).strict();
+export const titleSchema = z
+  .string()
+  .trim()
+  .min(1, 'A title is required.')
+  .max(200)
+  .refine((value) => !value.includes('\0'), 'The title contains invalid characters.');
+export const contentSchema = z
+  .string()
+  .max(500_000)
+  .refine((value) => !value.includes('\0'), 'Content contains invalid characters.')
+  .refine((value) => Buffer.byteLength(value, 'utf8') <= 500_000, 'Content must be under 500 KB.');
+export const createSchema = z
+  .object({ title: titleSchema.default('Untitled document'), content: contentSchema.optional() })
+  .strict();
+export const updateSchema = z
+  .object({ title: titleSchema.optional(), content: contentSchema.optional() })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, 'Provide a title or content.');
+export const pageSchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(50).default(12),
+    cursor: z.string().max(300).optional(),
+  })
+  .strict();
+export const listSchema = pageSchema.extend({
+  section: z.enum(['mine', 'shared']).default('mine'),
+  q: z.string().trim().max(100).default(''),
+});
+export const shareSchema = z
+  .object({ email: z.email().trim().toLowerCase().max(254), role: z.enum(['EDITOR', 'VIEWER']) })
+  .strict();
 export const roleSchema = z.object({ role: z.enum(['EDITOR', 'VIEWER']) }).strict();
 export const loginSchema = z.object({ userId: idSchema }).strict();

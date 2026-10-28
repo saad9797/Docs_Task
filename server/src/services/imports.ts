@@ -6,7 +6,13 @@ import { titleSchema } from '../validation.js';
 let active = 0;
 export async function importDocument(userId: string, file?: Express.Multer.File) {
   if (!file) throw new AppError(400, 'UPLOAD', 'Choose a .txt, .md, or .docx file to import.');
-  const name = file.originalname.replaceAll('\\', '/').split('/').at(-1)!;
+  let filename = file.originalname;
+  try {
+    filename = new TextDecoder('utf-8', { fatal: true }).decode(Buffer.from(filename, 'latin1'));
+  } catch {
+    /* Preserve a non-UTF-8 multipart filename. */
+  }
+  const name = filename.replaceAll('\\', '/').split('/').at(-1)!;
   const extension = extname(name).toLowerCase();
   if (!['.txt', '.md', '.docx'].includes(extension))
     throw new AppError(

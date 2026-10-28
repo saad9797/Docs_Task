@@ -46,9 +46,16 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     headers.set('Content-Type', 'application/json');
   let res: Response;
   try {
-    res = await fetch(`/api${path}`, { ...options, headers });
+    const timeout = AbortSignal.timeout(90000);
+    res = await fetch(`/api${path}`, {
+      ...options,
+      headers,
+      signal: options.signal ? AbortSignal.any([options.signal, timeout]) : timeout,
+    });
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') throw error;
+    if (error instanceof Error && error.name === 'TimeoutError')
+      throw new ApiError(0, 'The server is taking too long to respond. Please try again.');
     throw new ApiError(0, 'Unable to connect. Check your connection and try again.');
   }
   if (!res.ok) {

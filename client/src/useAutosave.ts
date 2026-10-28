@@ -13,7 +13,7 @@ export function useAutosave(id: string) {
     clearTimeout(timer.current);
     if (running.current) return running.current;
     const task = (async () => {
-      while (Object.keys(pending.current).length) {
+      while (alive.current && Object.keys(pending.current).length) {
         const batch = pending.current;
         pending.current = {};
         if (alive.current) {
@@ -29,6 +29,7 @@ export function useAutosave(id: string) {
             }),
           });
         } catch (e) {
+          if (!alive.current) return false;
           pending.current = { ...batch, ...pending.current };
           if (alive.current) {
             setStatus('error');
@@ -76,6 +77,7 @@ export function useAutosave(id: string) {
     document.addEventListener('visibilitychange', visibility);
     return () => {
       alive.current = false;
+      pending.current = {};
       clearTimeout(timer.current);
       window.removeEventListener('beforeunload', unload);
       document.removeEventListener('visibilitychange', visibility);
