@@ -16,16 +16,44 @@ test('downloads current formatted content as a named PDF without opening print',
   const html = '<h1>Latest edits</h1><p><strong>Bold</strong> and <u>underlined</u></p>';
   await downloadPdf(html, 'Report: draft?');
   expect(pdf.set).toHaveBeenCalledWith(
-    expect.objectContaining({ filename: 'Report draft.pdf', margin: 15 }),
+    expect.objectContaining({
+      filename: 'Report draft.pdf',
+      margin: 15,
+      image: { type: 'png', quality: 1 },
+      pagebreak: expect.objectContaining({
+        avoid: expect.arrayContaining(['p', 'li', '.pdf-heading-group']),
+      }),
+      html2canvas: expect.objectContaining({ windowWidth: 1024 }),
+    }),
   );
   const content = pdf.from.mock.calls[0][0] as HTMLElement;
   expect(content.querySelector('h1')?.textContent).toBe('Latest edits');
   expect(content.querySelector('strong')?.textContent).toBe('Bold');
   expect(content.querySelector('u')?.textContent).toBe('underlined');
   expect(content.style.width).toBe('180mm');
+  expect(content.className).toBe('pdf-document');
+  expect(content.querySelector('.pdf-heading-group')?.textContent).toBe(
+    'Latest editsBold and underlined',
+  );
   expect(content.isConnected).toBe(false);
   expect(pdf.save).toHaveBeenCalledOnce();
   expect(print).not.toHaveBeenCalled();
+});
+
+test('normalizes nested list spacing and keeps heading runs with their paragraph', async () => {
+  pdf.save.mockResolvedValue(undefined);
+  await downloadPdf(
+    '<h1>One</h1><h2>Two</h2><p>Introduction</p><ul><li><p>First</p><ul><li><p>Nested</p></li></ul></li></ul><h3>Last heading</h3>',
+    'Lists',
+  );
+  const content = pdf.from.mock.calls[0][0] as HTMLElement;
+  expect(content.querySelector('.pdf-heading-group')?.innerHTML).toContain('Introduction');
+  expect(content.querySelectorAll('.pdf-heading-group')).toHaveLength(2);
+  expect(content.querySelector('li > p')?.getAttribute('style')).toContain('margin: 0px');
+  expect(content.querySelector('li li > p')?.getAttribute('style')).toContain('margin: 0px');
+  expect(content.querySelector('h1')?.style.fontSize).toBe('24pt');
+  expect(content.querySelector('h2')?.style.fontSize).toBe('18pt');
+  expect(content.querySelector('h3')?.style.fontSize).toBe('14pt');
 });
 
 test('propagates PDF generation failures so the export menu can report them', async () => {

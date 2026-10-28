@@ -37,31 +37,92 @@ export async function downloadMarkdown(html: string, title: string): Promise<voi
 export async function downloadPdf(html: string, title: string): Promise<void> {
   const { default: html2pdf } = await import('html2pdf.js');
   const content = document.createElement('div');
-  content.className = 'tiptap';
+  // Do not inherit .tiptap screen/media-query styles: the same document must
+  // export identically from a phone and a desktop.
+  content.className = 'pdf-document';
   content.innerHTML = html;
   // Use a fixed page width, independent of the editor's responsive layout.
   Object.assign(content.style, {
     width: '180mm',
+    display: 'flow-root',
+    boxSizing: 'border-box',
     padding: '0',
     minHeight: '0',
     backgroundColor: '#ffffff',
-    color: '#283047',
+    color: '#111111',
     fontFamily: "Georgia, 'Times New Roman', serif",
     fontSize: '12pt',
-    lineHeight: '1.8',
+    lineHeight: '1.55',
+    overflowWrap: 'anywhere',
+  });
+  content.querySelectorAll<HTMLElement>('*').forEach((element) => {
+    element.style.boxSizing = 'border-box';
+    element.style.maxWidth = '100%';
+  });
+  content.querySelectorAll<HTMLElement>('p').forEach((paragraph) => {
+    paragraph.style.margin = '0 0 0.75em';
   });
   content.querySelectorAll<HTMLElement>('h1, h2, h3').forEach((heading) => {
-    heading.style.breakAfter = 'avoid';
+    Object.assign(heading.style, {
+      fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+      fontSize: { H1: '24pt', H2: '18pt', H3: '14pt' }[heading.tagName],
+      lineHeight: '1.25',
+      margin: '0.9em 0 0.45em',
+    });
+  });
+  content.querySelectorAll<HTMLElement>('ul, ol').forEach((list) => {
+    Object.assign(list.style, { margin: '0 0 0.75em', paddingLeft: '1.8em' });
+  });
+  content.querySelectorAll<HTMLElement>('li').forEach((item) => {
+    item.style.marginBottom = '0.25em';
+    item.querySelectorAll<HTMLElement>(':scope > p').forEach((paragraph) => {
+      paragraph.style.margin = '0';
+    });
+  });
+  content.querySelectorAll<HTMLElement>('pre').forEach((block) => {
+    Object.assign(block.style, {
+      whiteSpace: 'pre-wrap',
+      background: '#f3f4f6',
+      padding: '10pt',
+      fontSize: '10pt',
+    });
+  });
+  content.querySelectorAll<HTMLElement>('blockquote').forEach((block) => {
+    Object.assign(block.style, {
+      margin: '0 0 0.75em',
+      paddingLeft: '12pt',
+      borderLeft: '2pt solid #cccccc',
+    });
+  });
+  // html2pdf does not implement break-after: avoid. Keep each heading run with
+  // its following paragraph in an explicit, unbreakable group instead.
+  content.querySelectorAll<HTMLElement>('h1, h2, h3').forEach((heading) => {
+    if (heading.parentElement?.className === 'pdf-heading-group') return;
+    const group = document.createElement('div');
+    group.className = 'pdf-heading-group';
+    group.style.display = 'flow-root';
+    heading.before(group);
+    group.append(heading);
+    while (group.nextElementSibling?.matches('h1, h2, h3')) {
+      group.append(group.nextElementSibling);
+    }
+    if (group.nextElementSibling?.matches('p')) group.append(group.nextElementSibling);
   });
   await document.fonts?.ready;
-  await html2pdf()
-    .set({
-      filename: `${sanitizeFilename(title)}.pdf`,
-      margin: 15,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, backgroundColor: '#ffffff', scrollY: 0 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    })
-    .from(content)
-    .save();
+  const worker = html2pdf();
+  // The library's bundled declaration omits its documented pagebreak option.
+  const options: Parameters<typeof worker.set>[0] & {
+    pagebreak: { mode: string[]; avoid: string[] };
+  } = {
+    filename: `${sanitizeFilename(title)}.pdf`,
+    margin: 15,
+    image: { type: 'png', quality: 1 },
+    pagebreak: {
+      mode: ['css', 'legacy'],
+      avoid: ['p', 'li', 'pre', 'blockquote', '.pdf-heading-group'],
+    },
+    html2canvas: { scale: 2, backgroundColor: '#ffffff', scrollY: 0, windowWidth: 1024 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+  };
+  await worker.set(options).from(content).save();
 }
