@@ -10,6 +10,7 @@ A lightweight collaborative document workspace: React, TypeScript, Vite, Materia
 - Separate **My documents** / **Shared with me** views, metadata-only cursor pagination (12 documents per page, maximum 50), database-side title search, owner details, updated time, and role badges.
 - Owners invite by email, change roles, revoke access, copy links, and delete documents. Editors edit title/content; viewers see a read-only editor. The API enforces every role.
 - Import `.txt`, `.md`, or `.docx` as a **new** editable document. Filename becomes the title. Upload limit: **2 MiB (2,097,152 bytes)**, displayed as 2 MB in the UI. Text/Markdown must be UTF-8. Sanitized document content is limited to **500,000 UTF-8 bytes**.
+- **Export** in the editor toolbar is available to Owners, Editors, and Viewers. Markdown downloads the currently displayed content (including unsaved edits) as a sanitized `<title>.md` filename using Turndown, loaded only when needed. Headings, bold, italic, and lists are preserved; Markdown has no standard underline syntax, so underline falls back to plain text. **PDF** opens the browser print dialog; choose **Save as PDF**. The print layout includes only document content with clean typography, without the app chrome, toolbar, or status messages. Browser headers/footers can be disabled in print settings.
 - Responsive workspace, accessible control labels, active formatting state, loading/error/empty states, and a centered white writing surface.
 
 Conversion and HTML sanitization happen on the server. Word/Markdown parsing runs in worker threads, with two concurrent conversions per process, a 30-second cold worker startup allowance followed by a 10-second conversion deadline, 96 MB worker JS heap limit, and ZIP expansion checks (16 MiB / 1,000 entries). Files stay in memory and are not retained. Images, tables, external assets, and advanced Word layout are not imported. Supported text formatting survives refresh.
@@ -153,4 +154,4 @@ References: [Render Blueprint specification](https://render.com/docs/blueprint-s
 
 ## Deprioritized
 
-Real-time cursors/CRDT, comments, version history, real authentication/signup, PDF/docx export, image embedding, and offline mode are explicitly out of scope.
+Real-time cursors/CRDT, comments, version history, real authentication/signup, docx export, image embedding, and offline mode are explicitly out of scope. PDF export uses browser printing rather than a server-generated PDF.

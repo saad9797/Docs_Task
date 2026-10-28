@@ -44,7 +44,16 @@ import { api, message, type Document } from './api';
 import { ErrorState, Header, Loading, RoleBadge } from './components';
 import { useAutosave } from './useAutosave';
 import ShareDialog from './ShareDialog';
-function Toolbar({ editor, readonly }: { editor: TiptapEditor; readonly: boolean }) {
+import ExportMenu from './ExportMenu';
+function Toolbar({
+  editor,
+  readonly,
+  title,
+}: {
+  editor: TiptapEditor;
+  readonly: boolean;
+  title: string;
+}) {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -91,88 +100,101 @@ function Toolbar({ editor, readonly }: { editor: TiptapEditor; readonly: boolean
     },
   ];
   return (
-    <Stack
-      direction="row"
-      spacing={0.5}
-      alignItems="center"
+    <Box
       sx={{
-        px: { xs: 1, md: 3 },
-        py: 1,
-        overflowX: 'auto',
+        display: 'flex',
+        alignItems: 'center',
         bgcolor: 'white',
         borderBottom: '1px solid',
         borderColor: 'divider',
       }}
-      role="toolbar"
-      aria-label="Text formatting"
     >
-      <Tooltip title="Undo (Ctrl/⌘ Z)">
-        <span>
-          <IconButton
-            aria-label="Undo"
-            disabled={readonly || !state.undo}
-            onClick={() => editor.chain().focus().undo().run()}
-          >
-            <Undo fontSize="small" />
-          </IconButton>
-        </span>
-      </Tooltip>
-      <Tooltip title="Redo (Ctrl/⌘ Shift Z)">
-        <span>
-          <IconButton
-            aria-label="Redo"
-            disabled={readonly || !state.redo}
-            onClick={() => editor.chain().focus().redo().run()}
-          >
-            <Redo fontSize="small" />
-          </IconButton>
-        </span>
-      </Tooltip>
-      <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-      <Select
-        size="small"
-        value={state.heading}
-        disabled={readonly}
-        inputProps={{ 'aria-label': 'Text style' }}
-        onChange={(e) => {
-          const value = Number(e.target.value);
-          if (value)
-            editor
-              .chain()
-              .focus()
-              .setHeading({ level: value as 1 | 2 | 3 })
-              .run();
-          else editor.chain().focus().setParagraph().run();
+      <Stack
+        direction="row"
+        spacing={0.5}
+        alignItems="center"
+        sx={{
+          px: { xs: 1, md: 3 },
+          py: 1,
+          overflowX: 'auto',
+          flex: 1,
+          minWidth: 0,
+          bgcolor: 'white',
         }}
-        sx={{ minWidth: 140, '& fieldset': { border: 0 }, fontSize: 13 }}
+        role="toolbar"
+        aria-label="Text formatting"
       >
-        <MenuItem value={0}>Normal text</MenuItem>
-        <MenuItem value={1}>Heading 1</MenuItem>
-        <MenuItem value={2}>Heading 2</MenuItem>
-        <MenuItem value={3}>Heading 3</MenuItem>
-      </Select>
-      <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-      {controls.map((control) => (
-        <Tooltip key={control.label} title={control.label}>
+        <Tooltip title="Undo (Ctrl/⌘ Z)">
           <span>
             <IconButton
-              aria-label={control.label}
-              aria-pressed={control.active}
-              disabled={readonly}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={control.run}
-              sx={{
-                borderRadius: 1,
-                color: control.active ? 'primary.main' : 'text.secondary',
-                bgcolor: control.active ? '#eaf0ff' : 'transparent',
-              }}
+              aria-label="Undo"
+              disabled={readonly || !state.undo}
+              onClick={() => editor.chain().focus().undo().run()}
             >
-              {control.icon}
+              <Undo fontSize="small" />
             </IconButton>
           </span>
         </Tooltip>
-      ))}
-    </Stack>
+        <Tooltip title="Redo (Ctrl/⌘ Shift Z)">
+          <span>
+            <IconButton
+              aria-label="Redo"
+              disabled={readonly || !state.redo}
+              onClick={() => editor.chain().focus().redo().run()}
+            >
+              <Redo fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+        <Select
+          size="small"
+          value={state.heading}
+          disabled={readonly}
+          inputProps={{ 'aria-label': 'Text style' }}
+          onChange={(e) => {
+            const value = Number(e.target.value);
+            if (value)
+              editor
+                .chain()
+                .focus()
+                .setHeading({ level: value as 1 | 2 | 3 })
+                .run();
+            else editor.chain().focus().setParagraph().run();
+          }}
+          sx={{ minWidth: 140, '& fieldset': { border: 0 }, fontSize: 13 }}
+        >
+          <MenuItem value={0}>Normal text</MenuItem>
+          <MenuItem value={1}>Heading 1</MenuItem>
+          <MenuItem value={2}>Heading 2</MenuItem>
+          <MenuItem value={3}>Heading 3</MenuItem>
+        </Select>
+        <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+        {controls.map((control) => (
+          <Tooltip key={control.label} title={control.label}>
+            <span>
+              <IconButton
+                aria-label={control.label}
+                aria-pressed={control.active}
+                disabled={readonly}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={control.run}
+                sx={{
+                  borderRadius: 1,
+                  color: control.active ? 'primary.main' : 'text.secondary',
+                  bgcolor: control.active ? '#eaf0ff' : 'transparent',
+                }}
+              >
+                {control.icon}
+              </IconButton>
+            </span>
+          </Tooltip>
+        ))}
+      </Stack>
+      <Box sx={{ px: 1, flexShrink: 0 }}>
+        <ExportMenu editor={editor} title={title} />
+      </Box>
+    </Box>
   );
 }
 function OpenDocument({ doc }: { doc: Document }) {
@@ -211,7 +233,7 @@ function OpenDocument({ doc }: { doc: Document }) {
     },
   });
   return (
-    <>
+    <Box className="document-editor">
       <Header />
       <Box sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'white' }}>
         <Stack
@@ -311,9 +333,11 @@ function OpenDocument({ doc }: { doc: Document }) {
             </>
           )}
         </Stack>
-        {editor && <Toolbar editor={editor} readonly={readonly} />}
+        {editor && (
+          <Toolbar editor={editor} readonly={readonly} title={title.trim() || validTitle.current} />
+        )}
       </Box>
-      <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
+      <Container className="document-content" maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
         {readonly && (
           <Alert severity="info" icon={<LockOutlined fontSize="small" />} sx={{ mb: 2 }}>
             You can read this document. Ask {doc.owner.name} for Editor access to make changes.
@@ -325,6 +349,7 @@ function OpenDocument({ doc }: { doc: Document }) {
           </Box>
         )}
         <Paper
+          className="document-print-surface"
           variant="outlined"
           sx={{ borderRadius: { xs: 1, md: 0 }, boxShadow: '0 4px 24px #25396606', minHeight: 850 }}
         >
@@ -415,7 +440,7 @@ function OpenDocument({ doc }: { doc: Document }) {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Box>
   );
 }
 export default function Editor() {

@@ -4,7 +4,7 @@
 
 ## Included
 
-- `/client`: React + TypeScript + Vite + Material UI, profile picker, two document collections, server-side title search, paginated cards, Tiptap editor, active toolbar, serial autosave, sharing dialog, file-import dialog, responsive styling, loading/error/empty states, and Vitest/jsdom API/autosave regression tests.
+- `/client`: React + TypeScript + Vite + Material UI, profile picker, two document collections, server-side title search, paginated cards, Tiptap editor, active toolbar, serial autosave, sharing dialog, file-import dialog, responsive styling, loading/error/empty states, Markdown/PDF export menu for all reading roles, and Vitest/jsdom API/autosave/export regression tests.
 - `/server`: Express + TypeScript, signed mock sessions, Zod validation, centralized JSON errors, Prisma services, role enforcement, sanitized content, memory uploads and worker conversion.
 - `/server/prisma`: schema, SQL migration, idempotent four-user/two-document seed.
 - `/server/src/**/*.test.ts`: Vitest + Supertest integration tests using separate PostgreSQL data and isolated cleanup, plus worker lifecycle tests.
@@ -19,11 +19,13 @@ Choose Alice, Bob, Carol, or Dave on the demo login page. Their addresses are `a
 
 ## Working features
 
-Document create/read/inline rename/content edit/delete; formatting persistence; visible debounced autosave with retry; separate own/shared lists with cursor pagination; server-side search; Owner/Editor/Viewer roles enforced by the API; invitation, role change, revocation; `.txt`/`.md`/`.docx` import and validation; same-service production hosting configuration.
+Document create/read/inline rename/content edit/delete; formatting persistence; visible debounced autosave with retry; separate own/shared lists with cursor pagination; server-side search; Owner/Editor/Viewer roles enforced by the API; invitation, role change, revocation; `.txt`/`.md`/`.docx` import and validation; same-service production hosting configuration. All three roles can export current content as Markdown with a sanitized filename or use PDF → browser “Save as PDF”; underline becomes plain text in Markdown. Export adds no API endpoints or schema changes.
 
 ## External completion steps
 
 Verification after the assignment QA audit: ESLint, both TypeScript checks, both production builds, and **36 automated tests passed** (12 client, 20 PostgreSQL-backed integration, 4 worker lifecycle). A fresh `npm ci`, fresh database migration/seed, and the full check passed in an isolated clean checkout with the QA changes applied. `npm audit` reported **0 vulnerabilities**. Live Supertest checks passed **22/22**, and headless Chromium browser checks passed **13/13**, including keyboard formatting, undo/redo, autosave/error recovery, persistence, sharing roles, and mobile overflow. Production HTTP smoke checks also passed. Baseline failures and each separate fix/rerun are recorded in `docs/QA_REPORT.md`; actual Render/Neon deployment remains unverified.
+
+Export follow-up verification: lint, both type checks, both builds, and **38 tests passed** (14 client, 24 server). The new conversion test covers headings, bold/italic, both list types, and underline fallback; filename tests cover illegal characters and reserved names. Browser checks passed for Owner/Editor/Viewer Markdown downloads, PDF print invocation and hint, mobile access, and unchanged persisted data with no export API writes. Chromium print rendering produced nine-page documents for each role, preserving all 220 test paragraphs without app chrome or blank pages. Users complete PDF saving through their browser's “Save as PDF” dialog. Server code, endpoints, and schema were not changed.
 
 - Create Neon database, supply production connection URL, push repository, and deploy to Render.
 - Replace the live URL above; validate the actual deployed environment.

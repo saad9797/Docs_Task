@@ -111,3 +111,75 @@ button:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+@media print {
+  @page folio-document {
+    margin: 18mm;
+  }
+  .document-editor {
+    page: folio-document;
+  }
+  html:has(.document-editor),
+  body:has(.document-editor) {
+    background: white !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body:has(.document-editor) {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  #root:has(.document-editor) > :not(.document-editor),
+  .document-editor > :not(.document-content),
+  .document-content > :not(.document-print-surface),
+  body:has(.document-editor) .MuiModal-root,
+  body:has(.document-editor) .MuiSnackbar-root {
+    display: none !important;
+  }
+  .document-content {
+    max-width: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .document-print-surface {
+    min-height: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .document-print-surface .tiptap {
+    min-height: 0;
+    padding: 0;
+    color: #111;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.55;
+  }
+  .document-print-surface .tiptap h1 {
+    font-size: 22pt;
+  }
+  .document-print-surface .tiptap h2 {
+    font-size: 16pt;
+  }
+  .document-print-surface .tiptap h3 {
+    font-size: 13pt;
+  }
+  .document-print-surface .tiptap h1,
+  .document-print-surface .tiptap h2,
+  .document-print-surface .tiptap h3 {
+    break-after: avoid;
+  }
+  .document-print-surface .tiptap p,
+  .document-print-surface .tiptap li {
+    orphans: 3;
+    widows: 3;
+  }
+  .document-print-surface .tiptap pre,
+  .document-print-surface .tiptap blockquote {
+    break-inside: avoid;
+  }
+  .document-print-surface .tiptap p.is-editor-empty:first-child::before {
+    display: none;
+  }
+}

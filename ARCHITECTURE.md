@@ -2,18 +2,22 @@
 
 ## Priorities
 
-Correct server authorization, reliable saves, bounded work, and a coherent writing experience came first. The app stays one deployable service with one database. The browser handles editor interaction and rendering; filtering, pagination, conversion, validation, and sanitization run on the server.
+Correct server authorization, reliable saves, bounded work, and a coherent writing experience came first. The app stays one deployable service with one database. The browser handles editor interaction and rendering; filtering, pagination, import conversion, validation, and sanitization run on the server.
 
 ## Layout and data
 
-`client/` contains React screens, a typed API client, shared session/theme components, and a serial autosave hook. The rich editor is lazy-loaded. Tiptap transactions update toolbar state through a focused subscription rather than rerendering the entire editor. HTML serialization happens at save time.
+`client/` contains React screens, a typed API client, shared session/theme components, and a serial autosave hook. The rich editor is lazy-loaded. Tiptap transactions update toolbar state through a focused subscription rather than rerendering the entire editor. HTML serialization happens on save or explicit export, rather than on every transaction.
 
 `server/src/routes.ts` validates transport inputs with Zod and calls `services/`; services enforce access rules and query Prisma. Errors are normalized centrally. `import-worker.mjs` isolates conversion CPU work from the Express event loop. Compiled worker files are included in the server build.
 
 - `User`: UUID, unique email, display name.
 - `Document`: UUID, owner FK, title, HTML content, creation/update timestamps.
 - `DocumentShare`: UUID, document/user FKs, Editor/Viewer role; unique `(documentId, userId)`.
-- Cascading FKs remove orphan shares. Owner/update-time and collaborator indexes support lists. Lists select only metadata, fetch `limit + 1`, and return a keyset cursor ordered by updated time and UUID. Search is performed in PostgreSQL. No client-side filtering or file conversion.
+- Cascading FKs remove orphan shares. Owner/update-time and collaborator indexes support lists. Lists select only metadata, fetch `limit + 1`, and return a keyset cursor ordered by updated time and UUID. Search and file imports are processed on the server.
+
+## Client-side export
+
+Export operates on the single document already loaded and authorized for reading, so Owners, Editors, and Viewers can export without another request, server endpoint, or schema change. Markdown lazily loads Turndown on demand and converts the current editor HTML, preserving headings, emphasis, and lists; underline becomes plain text because standard Markdown has no underline syntax. Filenames remove illegal characters and handle empty/reserved names. PDF reuses the browser's print engine with a stylesheet that hides app chrome and prints only document content; the menu tells users to choose “Save as PDF.” Export does not require saving first or change the existing editing/access behavior, and PDF pagination and browser headers/footers remain controlled by print settings.
 
 ## Authorization
 
