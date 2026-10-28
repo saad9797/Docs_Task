@@ -34,12 +34,34 @@ export async function downloadMarkdown(html: string, title: string): Promise<voi
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function printDocument(title: string): void {
-  const previousTitle = document.title;
-  document.title = sanitizeFilename(title);
-  try {
-    window.print();
-  } finally {
-    document.title = previousTitle;
-  }
+export async function downloadPdf(html: string, title: string): Promise<void> {
+  const { default: html2pdf } = await import('html2pdf.js');
+  const content = document.createElement('div');
+  content.className = 'tiptap';
+  content.innerHTML = html;
+  // Use a fixed page width, independent of the editor's responsive layout.
+  Object.assign(content.style, {
+    width: '180mm',
+    padding: '0',
+    minHeight: '0',
+    backgroundColor: '#ffffff',
+    color: '#283047',
+    fontFamily: "Georgia, 'Times New Roman', serif",
+    fontSize: '12pt',
+    lineHeight: '1.8',
+  });
+  content.querySelectorAll<HTMLElement>('h1, h2, h3').forEach((heading) => {
+    heading.style.breakAfter = 'avoid';
+  });
+  await document.fonts?.ready;
+  await html2pdf()
+    .set({
+      filename: `${sanitizeFilename(title)}.pdf`,
+      margin: 15,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, backgroundColor: '#ffffff', scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    })
+    .from(content)
+    .save();
 }

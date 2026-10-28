@@ -17,7 +17,7 @@ Correct server authorization, reliable saves, bounded work, and a coherent writi
 
 ## Client-side export
 
-Export operates on the single document already loaded and authorized for reading, so Owners, Editors, and Viewers can export without another request, server endpoint, or schema change. Markdown lazily loads Turndown on demand and converts the current editor HTML, preserving headings, emphasis, and lists; underline becomes plain text because standard Markdown has no underline syntax. Filenames remove illegal characters and handle empty/reserved names. PDF reuses the browser's print engine with a stylesheet that hides app chrome and prints only document content; the menu tells users to choose “Save as PDF.” Export does not require saving first or change the existing editing/access behavior, and PDF pagination and browser headers/footers remain controlled by print settings.
+Export operates on the single document already loaded and authorized for reading, so Owners, Editors, and Viewers can export without another request, server endpoint, or schema change. Markdown lazily loads Turndown on demand and converts the current editor HTML, preserving headings, emphasis, and lists; underline becomes plain text because standard Markdown has no underline syntax. Filenames remove illegal characters and handle empty/reserved names. PDF lazily loads html2pdf.js to render the current editor HTML into a downloadable A4 PDF with 15 mm margins and document typography. The menu awaits generation and reports export errors. Export does not require saving first or change the existing editing/access behavior.
 
 ## Authorization
 

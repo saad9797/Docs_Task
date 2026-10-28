@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { Editor } from '@tiptap/react';
-import { Alert, Box, Button, Divider, Menu, MenuItem, Snackbar, Typography } from '@mui/material';
+import { Alert, Button, Menu, MenuItem, Snackbar } from '@mui/material';
 import DownloadOutlined from '@mui/icons-material/DownloadOutlined';
 import ArrowDropDown from '@mui/icons-material/ArrowDropDown';
-import { downloadMarkdown, printDocument } from './export';
+import { downloadMarkdown, downloadPdf } from './export';
 
 export default function ExportMenu({ editor, title }: { editor: Editor; title: string }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -49,24 +49,21 @@ export default function ExportMenu({ editor, title }: { editor: Editor; title: s
           Markdown (.md)
         </MenuItem>
         <MenuItem
-          onClick={() => {
+          onClick={async () => {
             setAnchor(null);
+            setBusy(true);
             setError('');
             try {
-              printDocument(title);
+              await downloadPdf(editor.getHTML(), title);
             } catch {
-              setError('Unable to open the print dialog. Please try again.');
+              setError('Unable to export PDF. Please try again.');
+            } finally {
+              setBusy(false);
             }
           }}
         >
-          PDF
+          PDF (.pdf)
         </MenuItem>
-        <Divider />
-        <Box sx={{ px: 2, py: 1, maxWidth: 260 }}>
-          <Typography variant="caption" color="text.secondary">
-            For PDF, choose “Save as PDF” in the print dialog.
-          </Typography>
-        </Box>
       </Menu>
       <Snackbar open={Boolean(error)} autoHideDuration={6000} onClose={() => setError('')}>
         <Alert severity="error" onClose={() => setError('')}>
