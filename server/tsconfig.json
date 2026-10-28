@@ -1,1 +1,16 @@
-{"compilerOptions":{"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","strict":true,"esModuleInterop":true,"skipLibCheck":true,"outDir":"dist","rootDir":".","types":["node"]},"include":["src","prisma/seed.ts"],"exclude":["src/**/*.test.ts"]}
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["src", "prisma/seed.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

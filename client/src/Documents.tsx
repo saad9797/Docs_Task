@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import Add from '@mui/icons-material/Add';
+import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined';
 import Search from '@mui/icons-material/Search';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import ArrowForward from '@mui/icons-material/ArrowForward';
@@ -21,7 +22,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, message, type Document, type DocumentMeta, type Page } from './api';
 import { ErrorState, Header, relativeDate, RoleBadge } from './components';
 import { useSession } from './session';
+import ImportDialog from './ImportDialog';
 export default function Documents() {
+  const [importing, setImporting] = useState(false);
   const { user } = useSession();
   const navigate = useNavigate();
   const [section, setSection] = useState('mine'),
@@ -96,6 +99,7 @@ export default function Documents() {
   return (
     <>
       <Header />
+      <ImportDialog open={importing} onClose={() => setImporting(false)} />
       <Container maxWidth="lg" sx={{ pt: { xs: 4, md: 6 }, pb: 8 }}>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -114,9 +118,18 @@ export default function Documents() {
               Welcome back, {user?.name}. Pick up where you left off.
             </Typography>
           </Box>
-          <Button variant="contained" startIcon={<Add />} onClick={create} disabled={creating}>
-            {creating ? 'Creating…' : 'New document'}
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<UploadFileOutlined />}
+              onClick={() => setImporting(true)}
+            >
+              Import file
+            </Button>
+            <Button variant="contained" startIcon={<Add />} onClick={create} disabled={creating}>
+              {creating ? 'Creating…' : 'New document'}
+            </Button>
+          </Stack>
         </Stack>
         <Paper
           variant="outlined"
